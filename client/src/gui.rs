@@ -2,12 +2,15 @@ use std::sync::mpsc::{Receiver, Sender};
 
 use eframe::egui;
 
-struct Gui {}
+use crate::processing::ProcessingEvent;
 
-impl Default for Gui {
-    fn default() -> Self {
-        Self {}
-    }
+pub enum GuiEvent {
+    StartTest { ip: String },
+}
+
+struct Gui {
+    gui_sender: Sender<GuiEvent>,
+    processing_receiver: Receiver<ProcessingEvent>,
 }
 
 impl eframe::App for Gui {
@@ -18,7 +21,7 @@ impl eframe::App for Gui {
     }
 }
 
-pub fn run(_processing_tx: Sender<i32>, _gui_rx: Receiver<i32>) {
+pub fn run(gui_sender: Sender<GuiEvent>, processing_receiver: Receiver<ProcessingEvent>) {
     let options = eframe::NativeOptions {
         resizable: false,
         initial_window_size: Some(egui::Vec2 {
@@ -29,5 +32,14 @@ pub fn run(_processing_tx: Sender<i32>, _gui_rx: Receiver<i32>) {
         ..Default::default()
     };
 
-    eframe::run_native("Packer", options, Box::new(|_cc| Box::new(Gui::default())));
+    eframe::run_native(
+        "Packer",
+        options,
+        Box::new(|_cc| {
+            Box::new(Gui {
+                gui_sender,
+                processing_receiver,
+            })
+        }),
+    );
 }

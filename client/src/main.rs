@@ -1,9 +1,10 @@
-// Hide the console window in release mode on Windows
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::mpsc::{Receiver, Sender};
 
 use simple_logger::SimpleLogger;
+
+use crate::{gui::GuiEvent, processing::ProcessingEvent};
 
 mod gui;
 mod processing;
@@ -16,13 +17,17 @@ fn main() {
 
     log::info!("Starting client");
 
-    let (gui_tx, gui_rx): (Sender<i32>, Receiver<i32>) = std::sync::mpsc::channel();
-    let (processing_tx, processing_rx): (Sender<i32>, Receiver<i32>) = std::sync::mpsc::channel();
+    let (gui_sender, gui_receiver): (Sender<GuiEvent>, Receiver<GuiEvent>) =
+        std::sync::mpsc::channel();
+    let (processing_sender, processing_receiver): (
+        Sender<ProcessingEvent>,
+        Receiver<ProcessingEvent>,
+    ) = std::sync::mpsc::channel();
 
     std::thread::spawn(move || {
         log::info!("Spawned processing thread");
-        processing::run(gui_tx, processing_rx);
+        processing::run(processing_sender, gui_receiver);
     });
 
-    gui::run(processing_tx, gui_rx);
+    gui::run(gui_sender, processing_receiver);
 }
