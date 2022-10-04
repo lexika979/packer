@@ -2,6 +2,7 @@ use std::{sync::mpsc::Receiver, sync::mpsc::Sender};
 
 use crate::gui::GuiEvent;
 
+#[derive(Debug)]
 pub enum ProcessingEvent {
     CapturedTestRecord {
         bytes_sent: u32,
@@ -13,5 +14,7 @@ pub enum ProcessingEvent {
 }
 
 pub fn run(processing_sender: Sender<ProcessingEvent>, gui_receiver: Receiver<GuiEvent>) {
-    std::thread::park();
+    while let Ok(event) = gui_receiver.recv() {
+        println!("Received event: {:?}", event);
+    }
 }
